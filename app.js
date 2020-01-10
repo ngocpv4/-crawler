@@ -5,6 +5,7 @@ var request = require('request');
 var cheerio = require('cheerio');
 app.set('views', path.join(__dirname, 'views'));
 app.set("view engine", "jade");
+const fs = require('fs');
 const port = 5000;
 
 app.get('/', function (req, res) {
@@ -24,14 +25,26 @@ app.get('/', function (req, res) {
     // Start the request
     request(options, function (error, response, body) {
         if (!error && response.statusCode === 200) {
+            const arr = [];
             // Print out the response body
             var $ = cheerio.load(body);
             var doc = $('body').html();
-            // $('body div table:nth child(4) tbody tr').each(function () {
-            //     //add item to array
-            //     items.push($(this).text());
-            // });
-            res.render('index', { title: doc });
+            $('table').eq(4).children('tbody').children('tr').each(function (index) {
+                const data = $(this).find('a>img').attr('src');
+                const obj = {
+                    data: data
+                };
+                arr.push(JSON.stringify(obj));
+            });
+            fs.writeFile('data.txt', arr, function (err) {
+                if (err) {
+                    console.log(err);
+                }
+                else {
+                    console.log("success");
+                }
+            });
+            res.render('index', { title: $('table').eq(4).children().html() });
         }
     });
 });
